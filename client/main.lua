@@ -1,24 +1,18 @@
-local config = {}
-config.intensity = 4.0
-config.timeUntilReload = 10.0
-config.sprayRange = 3.0
-config.sprayEffectTime = 10
-
 local holdingpepperspray = false
 local usingpepperspray = false
-local peppersprayModel = "w_am_flare"
-local animDict = "weapons@first_person@aim_rng@generic@projectile@shared@core"
-local animName = "idlerng_med"
-local particleDict = "scr_bike_business"
-local particleName = "scr_bike_spraybottle_spray"
+local peppersprayModel = 'w_am_flare'
+local animDict = 'weapons@first_person@aim_rng@generic@projectile@shared@core'
+local animName = 'idlerng_med'
+local particleDict = 'scr_bike_business'
+local particleName = 'scr_bike_spraybottle_spray'
 local actionTime = 8
 local pepperspray_net = nil
 
 ---------------------------------------------------------------------------
 -- Toggling pepperspray --
 ---------------------------------------------------------------------------
-RegisterNetEvent("pepperspray:Togglepepperspray")
-AddEventHandler("pepperspray:Togglepepperspray", function()
+RegisterNetEvent('pepperspray:Togglepepperspray')
+AddEventHandler('pepperspray:Togglepepperspray', function()
     if not holdingpepperspray then
         RequestModel(GetHashKey(peppersprayModel))
         while not HasModelLoaded(GetHashKey(peppersprayModel)) do
@@ -37,7 +31,7 @@ AddEventHandler("pepperspray:Togglepepperspray", function()
         SetNetworkIdExistsOnAllMachines(netid, true)
         NetworkSetNetworkIdDynamic(netid, true)
         SetNetworkIdCanMigrate(netid, false)
-        AttachEntityToEntity(peppersprayspawned, GetPlayerPed(PlayerId()), GetPedBoneIndex(GetPlayerPed(PlayerId()), 28422), 0.05, -0.05, 0.0, 260.0, 0.0, 0.0, 1, 1, 0, 1, 0, 1)
+        AttachEntityToEntity(peppersprayspawned, GetPlayerPed(PlayerId()), GetPedBoneIndex(GetPlayerPed(PlayerId()), 28422), 0.05, -0.03, 0.0, 260.0, 0.0, 0.0, 1, 1, 0, 1, 0, 1)
         --TaskPlayAnim(GetPlayerPed(PlayerId()), 1.0, -1, -1, 50, 0, 0, 0, 0) -- 50 = 32 + 16 + 2
         TaskPlayAnim(GetPlayerPed(PlayerId()), animDict, animName, 1.0, -1, -1, 50, 0, 0, 0, 0)
         pepperspray_net = netid
@@ -55,8 +49,8 @@ end)
 ---------------------------------------------------------------------------
 -- Start Particles --
 ---------------------------------------------------------------------------
-RegisterNetEvent("pepperspray:StartParticles")
-AddEventHandler("pepperspray:StartParticles", function(peppersprayid)
+RegisterNetEvent('pepperspray:StartParticles')
+AddEventHandler('pepperspray:StartParticles', function(peppersprayid)
     local entity = NetToObj(peppersprayid)
 
     RequestNamedPtfxAsset(particleDict)
@@ -65,7 +59,7 @@ AddEventHandler("pepperspray:StartParticles", function(peppersprayid)
     end
 
     UseParticleFxAssetNextCall(particleDict)
-    local particleEffect = StartParticleFxLoopedOnEntity(particleName, entity, 0.2, 0.002, 0.0, 0.0, -95.0, 180.0, config.intensity, false, false, false)
+    local particleEffect = StartParticleFxLoopedOnEntity(particleName, entity, 0.2, 0.002, 0.0, 0.0, -95.0, 180.0, Config.Intensity, false, false, false)
     SetTimeout(10000, function()
         usingpepperspray = false
     end)
@@ -74,8 +68,8 @@ end)
 ---------------------------------------------------------------------------
 -- Stop Particles --
 ---------------------------------------------------------------------------
-RegisterNetEvent("pepperspray:StopParticles")
-AddEventHandler("pepperspray:StopParticles", function(peppersprayid)
+RegisterNetEvent('pepperspray:StopParticles')
+AddEventHandler('pepperspray:StopParticles', function(peppersprayid)
     local entity = NetToObj(peppersprayid)
     RemoveParticleFxFromEntity(entity)
 end)
@@ -85,15 +79,15 @@ end)
 ---------------------------------------------------------------------------
 local isSprayed = false
 
-RegisterNetEvent("pepperspray:PlayerEffect")
-AddEventHandler("pepperspray:PlayerEffect", function()
+RegisterNetEvent('pepperspray:PlayerEffect')
+AddEventHandler('pepperspray:PlayerEffect', function()
 	if not isSprayed then
-		SetTimecycleModifier("drunk")
+		SetTimecycleModifier('drunk')
 		SetTimecycleModifierStrength(2.0)
 		local ped = GetPlayerPed(PlayerId())
 		local fallPos = GetOffsetFromEntityInWorldCoords(ped, 0.0, -1.0, 0.0)
-		SetPedToRagdollWithFall(ped, config.sprayEffectTime * 1000, config.sprayEffectTime * 1000, 1, -GetEntityForwardVector(ped), 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-		Citizen.Wait(config.sprayEffectTime * 1000)
+		SetPedToRagdollWithFall(ped, Config.SprayEffectTime * 1000, Config.SprayEffectTime * 1000, 1, -GetEntityForwardVector(ped), 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+		Citizen.Wait(Config.SprayEffectTime * 1000)
 		ClearTimecycleModifier()
 	end
 end)
@@ -105,7 +99,7 @@ Citizen.CreateThread(function()
     while true do
         if holdingpepperspray then
             if IsPedInAnyVehicle(GetPlayerPed(-1), false) then
-                TriggerEvent("pepperspray:Togglepepperspray")
+                TriggerEvent('pepperspray:Togglepepperspray')
             end
             for i=140, 143 do
                 DisableControlAction(0, i, true)
@@ -125,16 +119,16 @@ end)
 function FireSpray()
     Citizen.CreateThread(function()
         usingpepperspray = true
-        local time = config.timeUntilReload
+        local time = Config.TimeUntilReload
         local count = time
-		TriggerServerEvent("pepperspray:SyncStartParticles", pepperspray_net)
+		TriggerServerEvent('pepperspray:SyncStartParticles', pepperspray_net)
 	
 		local foundPed = FindPedInRaycast()
 		if foundPed ~= 0 then
 			if IsPedAPlayer(foundPed) then
 				local playerid = GetPlayerFromPed(foundPed)
 				if playerid ~= -1 then
-					TriggerServerEvent("pepperspray:TriggerPlayerEffect", GetPlayerServerId(playerid))
+					TriggerServerEvent('pepperspray:TriggerPlayerEffect', GetPlayerServerId(playerid))
 				end
 			else
 				local fallPos = GetOffsetFromEntityInWorldCoords(foundPed, 0.0, -1.0, 0.0)
@@ -146,14 +140,14 @@ function FireSpray()
 
             if not holdingpepperspray then
                 usingpepperspray = false
-                TriggerServerEvent("pepperspray:SyncStopParticles", pepperspray_net)
+                TriggerServerEvent('pepperspray:SyncStopParticles', pepperspray_net)
                 return
             end
             
             Citizen.Wait(500)
             count = count - 0.5
         end
-        TriggerServerEvent("pepperspray:SyncStopParticles", pepperspray_net)
+        TriggerServerEvent('pepperspray:SyncStopParticles', pepperspray_net)
         usingpepperspray = false
     end)
 end
@@ -162,7 +156,7 @@ function FindPedInRaycast()
 	local player = PlayerId()
 	local plyPed = GetPlayerPed(player)
 	local plyPos = GetEntityCoords(plyPed, false)
-	local plyOffset = GetOffsetFromEntityInWorldCoords(plyPed, 0.0, config.sprayRange, 0.0)
+	local plyOffset = GetOffsetFromEntityInWorldCoords(plyPed, 0.0, Config.SprayRange, 0.0)
 	local rayHandle = StartShapeTestCapsule(plyPos.x, plyPos.y, plyPos.z, plyOffset.x, plyOffset.y, plyOffset.z, 1.0, 12, plyPed, 7)
 	local _, _, _, _, ped = GetShapeTestResult(rayHandle)
 	return ped
@@ -178,7 +172,7 @@ function GetPlayerFromPed(ped)
 end
 
 function Notification(message)
-	SetNotificationTextEntry("STRING")
+	SetNotificationTextEntry('STRING')
 	AddTextComponentString(message)
 	DrawNotification(0, 1)
 end
